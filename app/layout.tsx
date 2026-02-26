@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'CuentasClaras - Control de Ingresos y Egresos',
+  title: 'New South Personal - Control de Ingresos y Egresos',
   description: 'Sistema de control financiero para tu PYME. Registra ingresos, egresos y visualiza tu cierre mensual en tiempo real.',
   generator: 'v0.app',
   icons: {
