@@ -1,0 +1,175 @@
+'use client'
+
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
+import { PlusIcon } from 'lucide-react'
+
+interface Category {
+  id: string
+  name: string
+  type: 'ingreso' | 'egreso'
+}
+
+interface TransactionFormProps {
+  categories: Category[]
+  userId: string
+}
+
+export function TransactionForm({ categories, userId }: TransactionFormProps) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [type, setType] = useState<'ingreso' | 'egreso'>('egreso')
+  const router = useRouter()
+
+  const filteredCategories = categories.filter((c) => c.type === type)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const supabase = createClient()
+
+    const { error } = await supabase.from('transactions').insert({
+      type,
+      amount: Number(formData.get('amount')),
+      description: formData.get('description') as string || null,
+      category_id: formData.get('category_id') as string,
+      date: formData.get('date') as string,
+      payment_method: formData.get('payment_method') as string,
+      created_by: userId,
+    })
+
+    setLoading(false)
+
+    if (error) {
+      toast.error('Error al guardar: ' + error.message)
+      return
+    }
+
+    toast.success('Transaccion registrada')
+    setOpen(false)
+    router.refresh()
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusIcon className="mr-2 size-4" />
+          Nueva transaccion
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Registrar transaccion</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={type === 'ingreso' ? 'default' : 'outline'}
+              className={type === 'ingreso' ? 'flex-1 bg-income text-primary-foreground hover:bg-income/90' : 'flex-1'}
+              onClick={() => setType('ingreso')}
+            >
+              Ingreso
+            </Button>
+            <Button
+              type="button"
+              variant={type === 'egreso' ? 'default' : 'outline'}
+              className={type === 'egreso' ? 'flex-1 bg-expense text-primary-foreground hover:bg-expense/90' : 'flex-1'}
+              onClick={() => setType('egreso')}
+            >
+              Egreso
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="amount">Monto ($)</Label>
+            <Input
+              id="amount"
+              name="amount"
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="0.00"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="category_id">Categoria</Label>
+            <Select name="category_id" required>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredCategories.length === 0 ? (
+                  <SelectItem value="none" disabled>
+                    No hay categorias para este tipo
+                  </SelectItem>
+                ) : (
+                  filteredCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="description">Descripcion (opcional)</Label>
+            <Input
+              id="description"
+              name="description"
+              type="text"
+              placeholder="Ej: Compra de harina"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="date">Fecha</Label>
+              <Input
+                id="date"
+                name="date"
+                type="date"
+                defaultValue={new Date().toISOString().split('T')[0]}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="payment_method">Medio de pago</Label>
+              <Select name="payment_method" defaultValue="efectivo">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="efectivo">Efectivo</SelectItem>
+                  <SelectItem value="transferencia">Transferencia</SelectItem>
+                  <SelectItem value="cheque">Cheque</SelectItem>
+                  <SelectItem value="tarjeta">Tarjeta</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'Guardando...' : 'Guardar transaccion'}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
