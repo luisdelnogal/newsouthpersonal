@@ -75,7 +75,7 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-sidebar-foreground">
-              New South Personal
+              NewSouth
             </span>
             <span className="text-xs text-sidebar-foreground/60">
               Control Financiero

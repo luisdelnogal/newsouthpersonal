@@ -18,7 +18,7 @@ function LoginForm() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            CuentasClaras
+            New-South-Personal
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Control financiero para tu negocio
