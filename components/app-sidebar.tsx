@@ -11,6 +11,7 @@ import {
   UsersIcon,
   LogOutIcon,
   DollarSignIcon,
+  Building2Icon,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -51,6 +52,13 @@ const configItems = [
     href: '/dashboard/categorias',
     icon: TagIcon,
   },
+
+  {
+   label: 'Clientes',
+   href: '/dashboard/clientes',
+   icon: Building2Icon,
+  },
+
   {
     label: 'Recordatorios',
     href: '/dashboard/recordatorios',

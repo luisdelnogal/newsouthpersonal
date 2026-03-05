@@ -19,6 +19,10 @@ interface Category {
 interface Client {
   id: string
   name: string
+  cuit?: string | null
+  phone?: string | null
+  email?: string | null
+  address?: string | null
 }
 
 interface TransactionFormProps {
@@ -33,6 +37,8 @@ export function TransactionForm({ categories,clients,userId }: TransactionFormPr
   const [hasRemito, setHasRemito] = useState(false)
   const [clientId, setClientId] = useState<string | null>(null)
   const [remitoNumber, setRemitoNumber] = useState("")
+
+  const selectedClient = clients.find((c) => c.id === clientId) || null
 
   const router = useRouter()
   
@@ -167,6 +173,12 @@ export function TransactionForm({ categories,clients,userId }: TransactionFormPr
          </Select>
        </div>
 
+       {selectedClient && (
+       <div className="rounded-md border p-3 text-sm">
+         <div className="font-medium">{selectedClient.name}</div>
+      </div>
+     )}
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="description">Descripcion (opcional)</Label>
             <Input
@@ -176,6 +188,7 @@ export function TransactionForm({ categories,clients,userId }: TransactionFormPr
               placeholder="Ej: Compra de harina"
             />
           </div>
+
           <div className="flex items-center justify-between rounded-md border p-3">
              <div className="flex flex-col">
                <span className="text-sm font-medium">¿Tiene remito?</span>
