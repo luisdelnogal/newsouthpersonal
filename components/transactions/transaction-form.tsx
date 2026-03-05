@@ -10,24 +10,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { PlusIcon } from 'lucide-react'
-
 interface Category {
   id: string
   name: string
   type: 'ingreso' | 'egreso'
 }
 
-interface TransactionFormProps {
-  categories: Category[]
-  userId: string
+interface Client {
+  id: string
+  name: string
 }
 
-export function TransactionForm({ categories, userId }: TransactionFormProps) {
+interface TransactionFormProps {
+  categories: Category[]
+  clients: Client[]
+  userId: string
+}
+export function TransactionForm({ categories,clients,userId }: TransactionFormProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [type, setType] = useState<'ingreso' | 'egreso'>('egreso')
-  const router = useRouter()
+  const [hasRemito, setHasRemito] = useState(false)
+  const [clientId, setClientId] = useState<string | null>(null)
+  const [remitoNumber, setRemitoNumber] = useState("")
 
+  const router = useRouter()
+  
   const filteredCategories = categories.filter((c) => c.type === type)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -38,14 +46,17 @@ export function TransactionForm({ categories, userId }: TransactionFormProps) {
     const supabase = createClient()
 
     const { error } = await supabase.from('transactions').insert({
-      type,
-      amount: Number(formData.get('amount')),
-      description: formData.get('description') as string || null,
-      category_id: formData.get('category_id') as string,
-      date: formData.get('date') as string,
-      payment_method: formData.get('payment_method') as string,
-      created_by: userId,
-    })
+     type,
+     amount: Number(formData.get('amount')),
+     description: (formData.get('description') as string) || null,
+     category_id: formData.get('category_id') as string,
+     date: formData.get('date') as string,
+     payment_method: formData.get('payment_method') as string,
+     created_by: userId,
+
+    client_id: clientId,
+     remito_number: hasRemito ? (remitoNumber.trim() || null) : null,
+   })
 
     setLoading(false)
 
@@ -56,6 +67,11 @@ export function TransactionForm({ categories, userId }: TransactionFormProps) {
 
     toast.success('Transaccion registrada')
     setOpen(false)
+
+    setClientId(null)
+    setHasRemito(false)
+    setRemitoNumber("")
+
     router.refresh()
   }
 
@@ -127,6 +143,30 @@ export function TransactionForm({ categories, userId }: TransactionFormProps) {
             </Select>
           </div>
 
+
+          <div className="flex flex-col gap-2">
+            <Label>Cliente (opcional)</Label>
+
+            <Select
+              value={clientId ?? "none"}
+               onValueChange={(v) => setClientId(v === "none" ? null : v)}
+            >
+             <SelectTrigger>
+              <SelectValue placeholder="Seleccionar cliente" />
+             </SelectTrigger>
+   
+             <SelectContent>
+              <SelectItem value="none">Sin cliente</SelectItem>
+
+              {clients.map((c) => (
+               <SelectItem key={c.id} value={c.id}>
+                {c.name}
+               </SelectItem>
+             ))}
+           </SelectContent>
+         </Select>
+       </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="description">Descripcion (opcional)</Label>
             <Input
@@ -136,6 +176,34 @@ export function TransactionForm({ categories, userId }: TransactionFormProps) {
               placeholder="Ej: Compra de harina"
             />
           </div>
+          <div className="flex items-center justify-between rounded-md border p-3">
+             <div className="flex flex-col">
+               <span className="text-sm font-medium">¿Tiene remito?</span>
+               <span className="text-xs text-muted-foreground">
+                Activá para cargar el número de remito
+               </span>
+             </div>
+
+          <input
+             type="checkbox"
+             checked={hasRemito}
+             onChange={(e) => setHasRemito(e.target.checked)}
+           />
+         </div>
+
+          {hasRemito && (
+             <div className="flex flex-col gap-2">
+               <Label htmlFor="remito_number">Número de remito</Label>
+               <Input
+                 id="remito_number"
+                 type="text"
+                 placeholder="Ej: 0001-000123"
+                 value={remitoNumber}
+                 onChange={(e) => setRemitoNumber(e.target.value)}
+               />
+             </div>
+            )}
+                    
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">

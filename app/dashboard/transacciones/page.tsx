@@ -13,6 +13,13 @@ export default async function TransaccionesPage() {
     .eq('is_active', true)
     .order('name')
 
+  // Fetch clients for the form
+ const { data: clients } = await supabase
+  .from('clients')
+  .select('id, name')
+  .eq('is_active', true)
+  .order('name') 
+
   // Fetch user profile for role
   const { data: profile } = await supabase
     .from('profiles')
@@ -52,8 +59,9 @@ export default async function TransaccionesPage() {
         </div>
         {profile?.role !== 'lectura' && (
           <TransactionForm
-            categories={(categories || []) as Array<{ id: string; name: string; type: 'ingreso' | 'egreso' }>}
-            userId={user!.id}
+             categories={(categories || []) as Array<{ id: string; name: string; type: 'ingreso' | 'egreso' }>}
+             clients={(clients || []) as Array<{ id: string; name: string }>}
+             userId={user!.id}
           />
         )}
       </div>
